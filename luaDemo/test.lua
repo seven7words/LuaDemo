@@ -1,6 +1,74 @@
 local str = "不同的机体从属于不同的<color=#ff0000>阵营</color>，每个<color=#ff0000>阵营</color>的所带来的<color=#ff0000>加成</color>不同"
 
+local function _list_table(tb, table_list, level)
+    local ret = ""
+    local indent = string.rep(" ", level*4)
 
+    for k, v in pairs(tb) do
+        local quo = type(k) == "string" and "\"" or ""
+        ret = ret .. indent .. "[" .. quo .. tostring(k) .. quo .. "] = "
+
+        if type(v) == "table" then
+            local t_name = table_list[v]
+            if t_name then
+                ret = ret .. tostring(v) .. " -- > [\"" .. t_name .. "\"]\n"
+            else
+                table_list[v] = tostring(k)
+                ret = ret .. "{\n"
+                ret = ret .. _list_table(v, table_list, level+1)
+                ret = ret .. indent .. "}\n"
+            end
+        elseif type(v) == "string" then
+            ret = ret .. "\"" .. tostring(v) .. "\"\n"
+        else
+            ret = ret .. tostring(v) .. "\n"
+        end
+    end
+
+    local mt = getmetatable(tb)
+    if mt then 
+        ret = ret .. "\n"
+        local t_name = table_list[mt]
+        ret = ret .. indent .. "<metatable> = "
+
+        if t_name then
+            ret = ret .. tostring(mt) .. " -- > [\"" .. t_name .. "\"]\n"
+        else
+            ret = ret .. "{\n"
+            ret = ret .. _list_table(mt, table_list, level+1)
+            ret = ret .. indent .. "}\n"
+        end
+        
+    end
+
+   return ret
+end
+
+-------------------------------------------------------------------
+-- Public functions
+-------------------------------------------------------------------
+
+function table.str(tb)
+    if type(tb) ~= "table" then
+        error("Sorry, it's not table, it is " .. type(tb) .. ".")
+    end
+
+    local ret = " = {\n"
+    local table_list = {}
+    table_list[tb] = "root table"
+    ret = ret .. _list_table(tb, table_list, 1)
+    ret = ret .. "}"
+    return ret
+end
+function LogError(...)
+	local args = { ... }
+	local arg = (args)[1]
+	if type(arg) == 'table' then
+		args[1] = table.str(arg)
+	end
+    -- UIMethod.LogError('lua', '', tostring(args[1]))
+    print(tostring(args[1]))
+end
 function SubStringUTF8(str, startIndex, endIndex)
     if startIndex < 0 then
         startIndex = SubStringGetTotalIndex(str) + startIndex + 1;
@@ -76,12 +144,13 @@ end
         firstPos = pos + 1
         table.insert(posT, pos)
     end
+    LogError(posT)
     local isCanAdd = false
     while index <= maxNum do
         local s = SubStringUTF8(str, 1, index)
         for i=1,#posT - 1 do
             local v = posT[i]
-            if v == string.len(s) + 1  then
+            if v == string.len(s)  then
                 index = index + #t[i]
                 isCanAdd = true
             elseif string.len(s) < posT[i+1] - 1 and isCanAdd then
@@ -91,12 +160,10 @@ end
                 index = index + #t[i+1]
             end
         end
-        print(s)
         index = index + 1
     end
     print("sdfsdfsdfsd")
 end
 
-test(str)
 
-print("我的第三方商店的")
+test(str)
