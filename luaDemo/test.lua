@@ -1,4 +1,3 @@
-local str = "不同的机体从属于不同的<color=#ff0000>阵营</color>，每个<color=#ff0000>阵营</color>的所带来的<color=#ff0000>加成</color>不同"
 
 local function _list_table(tb, table_list, level)
     local ret = ""
@@ -129,9 +128,12 @@ end
      return byteCount
  end
 
+--  local str = "发现<color=#ff0000>资源宝箱</color>，请指挥官<color=#ff0000>点击</color>宝箱获取金币，金币的数量和任务相关"
+--  local str = "不同的机体从属于不同的<color=#ff0000>阵营</color>，每个<color=#ff0000>阵营</color>的所带来的<color=#ff0000>加成</color>不同"
+--  local str = "在关卡中击<color=#ff0000>败敌方机体可以获得金币</color>，金币的数量和任务相关"
  function test(str)
     local maxNum = SubStringGetTotalIndex(str)
-    local index = 1
+    local index = 0
     local t = {}
     for i in string.gmatch(str,"%<[%/%#%w=]*%>") do
         table.insert(t, i)
@@ -144,22 +146,32 @@ end
         firstPos = pos + 1
         table.insert(posT, pos)
     end
-    LogError(posT)
+    local up = 0
+    local currIndex = 0
     local isCanAdd = false
     while index <= maxNum do
         local s = SubStringUTF8(str, 1, index)
-        for i=1,#posT - 1 do
+        for i=1,#posT - 1, 2 do
             local v = posT[i]
-            if v == string.len(s)  then
-                index = index + #t[i]
-                isCanAdd = true
-            elseif string.len(s) < posT[i+1] - 1 and isCanAdd then
-                s = s..t[i+1]
-            elseif string.len(s) + 1 == posT[i+1] and isCanAdd then
-                s = s..t[i+1]
-                index = index + #t[i+1]
+            if v == string.len(s) + 1 then
+                currIndex = i
+                break
             end
         end
+        if posT[currIndex] == string.len(s) + 1 then
+            index = index + #t[currIndex]
+            s = s..t[currIndex]
+            up = posT[currIndex + 1]
+            isCanAdd = true
+        end
+        if  string.len(s) < up - 1 and isCanAdd  then
+            s = s..t[currIndex+1]
+        elseif string.len(s) + 1 == up and isCanAdd then
+            s = s..t[currIndex+1]
+            index = index + #t[currIndex+1]
+            isCanAdd = false
+        end
+        print(s)
         index = index + 1
     end
     print("sdfsdfsdfsd")
