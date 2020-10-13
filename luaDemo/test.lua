@@ -182,23 +182,48 @@
 
 -- print("我愛是否是")
 
-function foo(a)
-    print("foo", a)
-    return coroutine.yield(2*a)
+-- function foo(a)
+--     print("foo", a)
+--     return coroutine.yield(2*a)
+-- end
+
+-- co = coroutine.create(function (a, b)
+--     print("co-body", a, b)
+--     local r = foo(a+1)
+--     local s = foo(a + 2)
+--     print("co-body - 1", r, s)
+--     local r, s = coroutine.yield(a+b, a-b)
+--     print("co-body - 2", r, s)
+--     return b, "end"
+-- end)
+
+-- print("main", coroutine.resume(co, 1, 10))
+-- print("main", coroutine.resume(co, 5))
+-- print("main", coroutine.resume(co, 6))
+-- print("main", coroutine.resume(co, 6, 7))
+-- print("????")
+
+local t = {}
+
+local function test(  )
+    return "隨便撒"
 end
 
-co = coroutine.create(function (a, b)
-    print("co-body", a, b)
-    local r = foo(a+1)
-    local s = foo(a + 2)
-    print("co-body - 1", r, s)
-    local r, s = coroutine.yield(a+b, a-b)
-    print("co-body - 2", r, s)
-    return b, "end"
-end)
+t.func = test
 
-print("main", coroutine.resume(co, 1, 10))
-print("main", coroutine.resume(co, 5))
-print("main", coroutine.resume(co, 6))
-print("main", coroutine.resume(co, 6, 7))
-print("????")
+local newT = {
+    __call = function (  )
+        return "我愛你的"
+    end
+}
+
+setmetatable(t, newT)
+
+print(t.func())
+
+--__call的用法就是當作這個表的默認調用方法
+print(t(1, 2))
+
+--下述會報錯
+-- print(t.fds())
+
