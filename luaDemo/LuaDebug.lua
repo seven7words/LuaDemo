@@ -732,15 +732,15 @@ coroutine.resume = function(co, ...)
     end
     return _resume(co, ...)
 end
-local oldXpcall = xpcall
-xpcall = function(runFun,errFun,...)
-    return oldXpcall(runFun,function(err)
-        if(debugger_xpcall) then
-            debugger_xpcall()
-        end
-        errFun(err)
-    end,...)
+local _wrap = coroutine.wrap
+coroutine.wrap = function(fun,dd)
+    local newFun =_wrap(function() 
+        debug.sethook(debug_hook, "lrc")
+       return fun();
+    end)
+   return newFun
 end
+
 LuaDebugger.event = {
     S2C_SetBreakPoints = 1,
     C2S_SetBreakPoints = 2,
@@ -894,7 +894,7 @@ local function debugger_getFilePathInfo(file)
     local fileLength = string.len(file)
     local suffixNames = {
         ".lua",
-        ".txt.lua",
+        ".lua.txt",
         ".txt",
         ".bytes"
     }
@@ -2488,8 +2488,8 @@ function StartDebug(host, port,reLoad)
             debugger_reLoadFile = function() print("未实现代码重载") end
         end)
     end
-    local tempFun = function() end
-    return debugger_receiveDebugBreakInfo, tempFun
+
+    return debugger_receiveDebugBreakInfo, debugger_xpcall
 end
 
 --base64
